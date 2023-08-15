@@ -1,0 +1,28 @@
+Was frequently switching between Windows and WSL
+
+go get github.com/aws/aws-lambda-go/lambda
+
+aws iam create-role --role-name lambda-ex --assume-role-policy-document file://trust-policy.json
+
+iam attach-role-policy --role-name lambda-ex --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+GOARCH=amd64 GOOS=linux go build main.go
+
+zip main.zip main
+
+aws lambda create-function --function-name aws-go-lambda-func \
+--zip-file fileb://main.zip --handler main --runtime go1.x \
+--role arn:aws:iam::{yourAWSAccountARN}:role/lambda-ex
+
+aws iam list-policies --query 'Policies[?PolicyName==`AWSLambdaBasicExecutionRole`]'
+
+aws iam list-policies --query "Policies[?PolicyName=='AWSLambdaBasicExecutionRole'].Arn" --output text
+
+aws lambda invoke --function-name aws-go-lambda-func --cli-binary-format raw-in-base64-out --payload '{"What is your name?": "Jim","How old are you": "33"}' output.txt
+
+Commands to tidy up:
+
+aws lambda list-functions
+
+aws lambda delete-function \
+    --function-name {ARN}:function:aws-go-lambda-func
